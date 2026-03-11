@@ -8,12 +8,16 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Spyglass"
 config/description="A node that correlates to a in world Node2D CanvasItem, allowing for a Window node to interact with the SceneTree directly as if it were a CanvasItem itself - even for native windows"
 config/version="1.0.0.0"
-config/features=PackedStringArray("4.3", "GL Compatibility")
+config/features=PackedStringArray("4.6", "GL Compatibility")
 boot_splash/image="res://addon/spyglass/spyglass.png"
 config/icon="res://addon/spyglass/spyglass.png"
 
