@@ -3,7 +3,7 @@ extends EditorPlugin
 
 const PLUGIN_NAME := "Spyglass"
 
-const PLUGIN_ICON := preload("res://addon/spyglass/spyglass.svg")
+const PLUGIN_ICON:Texture2D = preload("res://addons/spyglass/spyglass.svg")
 
 func _get_plugin_name() -> String:
 	return PLUGIN_NAME
