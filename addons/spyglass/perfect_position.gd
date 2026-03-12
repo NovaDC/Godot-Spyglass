@@ -4,7 +4,7 @@ class_name PerfectPoint
 
 ## PerfectPoint
 ##
-## A external Godot library that supplies static functions that give transfroms to and from various canvas items,
+## A external Godot library that supplies static functions that give transforms to and from various canvas items,
 ## as well as various other helper utilities.[br]
 ## Used primarily for the [Spyglass] addon.
 
@@ -57,10 +57,10 @@ static func get_global_window_position(target:CanvasItem, window:Window = null) 
 static func set_global_window_position(target:CanvasItem, win_position:Vector2, window:Window = null):
 	target.global_position = get_true_window_inverse_transform(target, window) * win_position
 
-## Returns the given screen id's transfrom in the virtual screenspace.
+## Returns the given screen id's transform in the virtual screen space.
 static func get_screen_metascreen_transform(screen_id:int) -> Transform2D:
 	return Transform2D(0, DisplayServer.screen_get_position(screen_id))
-## Returns the given screen id's inverse transfrom in the virtual screenspace.
+## Returns the given screen id's inverse transform in the virtual screen space.
 static func get_screen_metascreen_inverse_transform(screen_id:int) -> Transform2D:
 	return Transform2D(0, DisplayServer.screen_get_position(screen_id)).affine_inverse()
 
@@ -94,5 +94,5 @@ static func node2d_get_recursive_enclosing_rect(parent:Node, owned:=false) -> Re
 ## Gets a single [Rect2] for all recursively all child [Nodes]s, such that the rect encloses all the [Control]s, [Sprite2D]s, and [Polygon2D]s in canvas space.
 ## The [param parent] will be ignored.
 ## See [control_get_recursive_enclosing_rect] and [node2d_get_recursive_enclosing_rect]
-static func canvasitem_get_recursive_enclosing_rect(parent:Node, owned:= false) -> Rect2:
+static func canvas_item_get_recursive_enclosing_rect(parent:Node, owned:= false) -> Rect2:
 	return enclosing_rect([node2d_get_recursive_enclosing_rect(parent, owned), control_get_recursive_enclosing_rect(parent, owned)])

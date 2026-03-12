@@ -182,7 +182,7 @@ const WM_HANDLE_MOUSE_BUTTON_MASK:MouseButtonMask = MOUSE_BUTTON_MASK_LEFT
 		_sync_window_settings()
 
 @export_group("Positioning")
-## Make the position of this node corlate to the center of the window
+## Make the position of this node corelate to the center of the window
 ## instead of the top left corner.
 @export var center := false:
 	get:
@@ -190,7 +190,7 @@ const WM_HANDLE_MOUSE_BUTTON_MASK:MouseButtonMask = MOUSE_BUTTON_MASK_LEFT
 	set(_value):
 		center = _value
 		_sync_camera_settings()
-## The screen id (see [DisplayServer] to lear more about screen ids) to position this window in.
+## The screen id (see [DisplayServer] to lean more about screen ids) to position this window in.
 @export var target_screen_id:int = 0
 ## See [member Viewport.snap_2d_transforms_to_pixel]
 @export var snap_2d_transforms_to_pixel := false:
@@ -208,7 +208,7 @@ const WM_HANDLE_MOUSE_BUTTON_MASK:MouseButtonMask = MOUSE_BUTTON_MASK_LEFT
 		_sync_window_settings()
 
 @export_group("Sizing")
-## Wrap the windows size to the size of it's child controlls. Works along side [member wrap_node2d].
+## Wrap the windows size to the size of it's child controls. Works along side [member wrap_node2d].
 ## Implicitly makes the window unresizable by its decorations.
 @export var wrap_controls := false:
 	get:
@@ -300,17 +300,17 @@ const WM_HANDLE_MOUSE_BUTTON_MASK:MouseButtonMask = MOUSE_BUTTON_MASK_LEFT
 	set(_value):
 		handle_input_locally = _value
 		_sync_window_settings()
-## Enables the window to be grabbed via the interactable area.
+## Enables the window to be grabbed via the intractable area.
 ## This will not mark any input events handled.
 @export var inner_mouse_grab := true
-## The antion that, when [member inner_mouse_grab] is enabled, is the action that is used as thew
-## action for grabbing the window's body.
+## The action that, when [member inner_mouse_grab] is enabled,
+## is used for grabbing the window's body.
 @export var inner_mouse_grab_action:StringName = "spyglass_grab"
 
 ## The rect of the window (without decoration), in tis Node2D's local space.
 ## [br][br] - NOTE setting this [b]ONLY[/b] sets it in world rect
 ## and does not set it's [member window_screen_rect].[br]
-## Use [method force_set_local_world_rect] instead to acheave that behaviour.
+## Use [method force_set_local_world_rect] instead to achieve that behaviour.
 var local_window_world_rect:Rect2:
 	get:
 		return Rect2(position - (in_world_size/2 if center else Vector2.ZERO), in_world_size)
@@ -322,7 +322,7 @@ var local_window_world_rect:Rect2:
 ## The rect of the window (without decoration), in the world's global space.
 ## [br][br] - NOTE setting this [b]ONLY[/b] sets it in world rect
 ## and does not set it's [member window_screen_rect].
-## Use [method force_set_global_world_rect] instead to acheave that behaviour.
+## Use [method force_set_global_world_rect] instead to achieve that behaviour.
 var global_window_world_rect:Rect2:
 	get:
 		return Rect2(global_position - (in_world_size/2 if center else Vector2.ZERO), in_world_size)
@@ -334,7 +334,7 @@ var global_window_world_rect:Rect2:
 ## The rect of the window (without decoration), in metascreen space.
 ## [br][br] - NOTE setting this [b]ONLY[/b] sets it in screen rect
 ## and does not set it's [member global_window_world_rect].
-## Use [method force_set_screen_rect] instead to acheave that behaviour.
+## Use [method force_set_screen_rect] instead to achieve that behaviour.
 var window_screen_rect:Rect2i:
 	get:
 		if _window_ref == null:
@@ -361,12 +361,13 @@ var window_screen_rect:Rect2i:
 		window_rect_changed.emit()
 
 ## Enable the spyglass in editor.
-## [br][br] - NOTE this feature is experemental and is not to be enabled
+## [br][br] - NOTE this feature is experimental and is not to be enabled
 ## when editing a scene that contains a spyglass,
 ## instead only to be used when using the scene in editor for a addon.
 ## Enabling this in a edited scene will cause graphical bugs and possibly crashes,
 ## and will make it difficult to position this node while editing.
 ## Only enable this behaviour after a scene is loaded or instantiated.
+## @experimental
 var use_in_editor := false
 
 var _inner_grabbed = false
@@ -439,7 +440,7 @@ func force_set_global_world_rect(rect:Rect2):
 
 	var wrap_t := window_world_transform.affine_inverse()
 	if wrap_controls and wrap_node2d:
-		rect.size = wrap_t * PerfectPoint.canvasitem_get_recursive_enclosing_rect(self).size
+		rect.size = wrap_t * PerfectPoint.canvas_item_get_recursive_enclosing_rect(self).size
 	elif wrap_node2d:
 		rect.size = wrap_t * PerfectPoint.node2d_get_recursive_enclosing_rect(self).size
 	elif wrap_controls:
@@ -457,7 +458,7 @@ func force_set_local_world_rect(rect:Rect2):
 
 	var wrap_t := window_world_transform.affine_inverse()
 	if wrap_controls and wrap_node2d:
-		rect.size = wrap_t * PerfectPoint.canvasitem_get_recursive_enclosing_rect(self).size
+		rect.size = wrap_t * PerfectPoint.canvas_item_get_recursive_enclosing_rect(self).size
 	elif wrap_node2d:
 		rect.size = wrap_t * PerfectPoint.node2d_get_recursive_enclosing_rect(self).size
 	elif wrap_controls:
@@ -476,8 +477,9 @@ func force_set_local_world_rect(rect:Rect2):
 ## and if [param require_cursor_change], also if the cursor is of an expected type.
 ## [param require_cursor_change] is usually too strict to use, but prevents many possible
 ## false positives.
-## [br][br] - NOTE This function is consitered experimental and may change in the future.
+## [br][br] - NOTE This function is considered experimental and may change in the future.
 ## [br] - NOTE This may not work as expected with embedded windows is some cases.
+## @experimental
 func guess_is_using_wm_handles(require_cursor_change:bool = false) -> bool:
 	if _window_ref.borderless or _window_ref.unfocusable:
 		return false
