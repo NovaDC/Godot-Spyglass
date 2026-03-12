@@ -65,34 +65,67 @@ static func get_screen_metascreen_inverse_transform(screen_id:int) -> Transform2
 	return Transform2D(0, DisplayServer.screen_get_position(screen_id)).affine_inverse()
 
 ## Returns a [Rect2] that encloses all of the given [param rects].[br]
-## Contrary to it's name, [param rects] can contain [Rect2] as well as [Rect2i]s, [Vector2]s, and [Vector2i]s.
-static func enclosing_rect(rects:Array) -> Rect2:
+## Contrary to it's name, [param rects] can contain [Rect2] as well as [Rect2i]s,
+## [Vector2]s, and [Vector2i]s.
+## It may also be a [PackedVector2Array].
+## Any other provided types (including their 3d counterparts), will be ignored.
+static func enclosing_rect(rects:Variant) -> Rect2:
 	var ret := Rect2()
+	if typeof(rects) not in [TYPE_ARRAY, TYPE_PACKED_VECTOR2_ARRAY]:
+		return ret
 	for rect in rects:
-		if rect is Rect2 or rect is Rect2i:
-			ret = ret.expand(rect.position)
-			ret = ret.expand(rect.position+rect.size)
-		elif rect is Vector2 or rect is Vector2i:
-			ret = ret.expand(rect)
-		else:
-			assert(false)
+		match (typeof(rect)):
+			TYPE_RECT2, TYPE_RECT2I:
+				ret = ret.expand(Vector2(rect.position))
+				ret = ret.expand(Vector2(rect.end))
+			TYPE_VECTOR2, TYPE_VECTOR2I:
+				ret = ret.expand(Vector2(rect))
 	return ret
 
-## Gets a single [Rect2] for all recursively all child [Control]s, such that the rect encloses all the [Control]s in canvas space.
-## The [param parent] will be ignored.
-static func control_get_recursive_enclosing_rect(parent:Node, owned:= false) -> Rect2:
-	return enclosing_rect(parent.find_children("*", "Control", true, owned).map(func(x:Control):return x.get_rect()))
 
-## Gets a single [Rect2] for all recursively all child [Node2D]s, such that the rect encloses all the [Sprite2D]s and [Polygon2D]s in canvas space.
-## The [param parent] will be ignored.
+## Gets a single [Rect2] for all recursively all child [Control]s,
+## such that the rect encloses all the [Control]s in global space.
+## The [param parent] will not be included in this rect.
+static func control_get_recursive_enclosing_rect(parent:Node, owned := false) -> Rect2:
+	var children := parent.find_children("*", "Control", true, owned)
+	return enclosing_rect(children.map(func(x:Control): return x.get_global_rect()))
+
+## Gets a single [Rect2] for all recursively all child [Node2D]s,
+## such that the rect encloses all the [Line2D]s, [TileMapLayer]s, [TimeMap]s,
+## [Sprite2D]s, and [Polygon2D]s in global space.
+## [AnimatedSprite2D]s are not currently supported.
+## The [param parent] will not be included in this rect.
 static func node2d_get_recursive_enclosing_rect(parent:Node, owned:=false) -> Rect2:
-	var ret := enclosing_rect(parent.find_children("*", "Sprite2D", true, owned).map(func(x:Sprite2D):return Rect2(x.position-((x.texture.get_size()*x.scale/2) if x.centered else Vector2.ZERO), x.texture.get_size()*x.scale)))
-	for polygon in parent.find_children("*", "Polygon2D", true, owned):
-		ret = enclosing_rect([ret] + Array(polygon.polygon).map(func (x:Vector2):return x + polygon.position))
-	return ret
+	var parts:Array[Variant] = []
 
-## Gets a single [Rect2] for all recursively all child [Nodes]s, such that the rect encloses all the [Control]s, [Sprite2D]s, and [Polygon2D]s in canvas space.
+	for sprite in parent.find_children("*", "Sprite2D", true, owned):
+		parts.append(sprite.to_global(sprite.get_rect().position))
+		parts.append(sprite.to_global(sprite.get_rect().end))
+
+	for polygon in parent.find_children("*", "Polygon2D", true, owned):
+		var poly_points:Array[Vector2] = Array(polygon.polygon)
+		poly_points = poly_points.map(polygon.to_global)
+		parts.append_array(poly_points)
+
+	for line in parent.find_children("*", "Line2D", true, owned):
+		var points:Array[Vector2] = Array(line.points)
+		points = points.map(line.to_global)
+		parts.append_array(points)
+
+	for map in (parent.find_children("*", "TileMapLayer", true, owned) +
+				parent.find_children("*", "TileMap", true, owned)
+				):
+		var used:Rect2i = map.get_used_rect()
+		parts.append(map.to_global(map.map_to_local(used.position)))
+		parts.append(map.to_global(map.map_to_local(used.end)))
+
+	return enclosing_rect(parts)
+
+## Gets a single [Rect2] for all recursively all child [Nodes]s,
+## such that the rect encloses all the [Control]s, [Sprite2D]s, and [Polygon2D]s in canvas space.
 ## The [param parent] will be ignored.
 ## See [control_get_recursive_enclosing_rect] and [node2d_get_recursive_enclosing_rect]
-static func canvas_item_get_recursive_enclosing_rect(parent:Node, owned:= false) -> Rect2:
-	return enclosing_rect([node2d_get_recursive_enclosing_rect(parent, owned), control_get_recursive_enclosing_rect(parent, owned)])
+static func canvas_item_get_recursive_enclosing_rect(parent:Node, owned := false) -> Rect2:
+	return enclosing_rect([node2d_get_recursive_enclosing_rect(parent, owned),
+							control_get_recursive_enclosing_rect(parent, owned)
+							])
