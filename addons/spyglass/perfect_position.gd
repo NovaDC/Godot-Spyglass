@@ -3,7 +3,7 @@
 class_name PerfectPoint
 
 ## PerfectPoint
-## 
+##
 ## A external Godot library that supplies static functions that give transfroms to and from various canvas items,
 ## as well as various other helper utilities.[br]
 ## Used primarily for the [Spyglass] addon.

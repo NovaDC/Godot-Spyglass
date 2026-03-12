@@ -14,16 +14,30 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="Spyglass"
 config/description="A node that correlates to a in world Node2D CanvasItem, allowing for a Window node to interact with the SceneTree directly as if it were a CanvasItem itself - even for native windows"
 config/version="1.0.0.0"
+config/name="Godot-Spyglass"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-boot_splash/image="res://addons/spyglass/spyglass.png"
-config/icon="res://addons/spyglass/spyglass.png"
+boot_splash/image="uid://c4rxhshda3sc4"
+config/icon="uid://jtj1qk24654v"
 
 [debug]
 
-gdscript/warnings/directory_rules={}
+gdscript/warnings/directory_rules={
+"res://addons": 0,
+"res://addons/spyglass": 1
+}
+gdscript/warnings/unassigned_variable=2
+gdscript/warnings/unassigned_variable_op_assign=2
+gdscript/warnings/shadowed_variable=2
+gdscript/warnings/shadowed_variable_base_class=2
+gdscript/warnings/shadowed_global_identifier=2
+gdscript/warnings/incompatible_ternary=2
+gdscript/warnings/untyped_declaration=1
+gdscript/warnings/unsafe_void_return=2
+gdscript/warnings/static_called_on_instance=2
+gdscript/warnings/missing_tool=2
+gdscript/warnings/missing_await=1
 
 [editor_plugins]
 
