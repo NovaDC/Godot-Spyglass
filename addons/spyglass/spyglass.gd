@@ -1,5 +1,5 @@
 @tool
-@icon("res://addons/spyglass/spyglass.svg")
+@icon("res://addons/spyglass/icon.svg")
 class_name Spyglass
 extends Node2D
 
