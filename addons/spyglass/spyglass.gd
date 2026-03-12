@@ -4,9 +4,9 @@ class_name Spyglass
 extends Node2D
 
 ## Spyglass
-## 
+##
 ## A node that correlates to a in world [Node2D] [CanvasItem], allowing for a [Window] node to
-## interact with the [SceneTree] directly as if it were a [CanvasItem] itself - 
+## interact with the [SceneTree] directly as if it were a [CanvasItem] itself -
 ## even for native windows.[br]
 ## [br]
 ## [br]
@@ -16,7 +16,7 @@ extends Node2D
 ## This node also add more features,
 ## allowing for the user to move the window with it reflecting that in the canvas,
 ## and other odds and ends allowing for a fully realised [CanvasItem] style [Window].
-## 
+##
 ## @experimental
 
 ## See [signal Window.about_to_popup]
@@ -61,7 +61,7 @@ signal window_rect_changed()
 ## All cursor types that may appear specifically when the window is being resized.
 const WM_HANDLE_CURSOR_RESIZE_TYPES:Array[DisplayServer.CursorShape] = [DisplayServer.CURSOR_VSIZE,
 																		DisplayServer.CURSOR_HSIZE,
-																		DisplayServer.CURSOR_HSIZE, 
+																		DisplayServer.CURSOR_HSIZE,
 																	DisplayServer.CURSOR_BDIAGSIZE,
 																	DisplayServer.CURSOR_FDIAGSIZE,
 																	   ]
@@ -397,7 +397,7 @@ func _notification(what: int) -> void:
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		queue_redraw()
-	
+
 	if process_callback == Camera2D.Camera2DProcessCallback.CAMERA2D_PROCESS_IDLE:
 		_update()
 
@@ -408,12 +408,12 @@ func _physics_process(_delta: float) -> void:
 func _draw():
 	if not Engine.is_editor_hint():
 		return
-	
+
 	const top_left := Vector2.ZERO
 	var bottom_left := in_world_size * Vector2.DOWN
 	var top_right := in_world_size * Vector2.RIGHT
 	var bottom_right := in_world_size
-	
+
 	draw_dashed_line(top_left, top_right, debug_rect_color, debug_rect_width, debug_rect_dash)
 	draw_dashed_line(top_right, bottom_right, debug_rect_color, debug_rect_width, debug_rect_dash)
 	draw_dashed_line(bottom_right, bottom_left, debug_rect_color, debug_rect_width, debug_rect_dash)
@@ -436,7 +436,7 @@ func force_set_screen_rect(rect:Rect2i):
 func force_set_global_world_rect(rect:Rect2):
 	var t := window_world_transform
 	t *= PerfectPoint.get_screen_metascreen_transform(target_screen_id)
-	
+
 	var wrap_t := window_world_transform.affine_inverse()
 	if wrap_controls and wrap_node2d:
 		rect.size = wrap_t * PerfectPoint.canvasitem_get_recursive_enclosing_rect(self).size
@@ -444,8 +444,8 @@ func force_set_global_world_rect(rect:Rect2):
 		rect.size = wrap_t * PerfectPoint.node2d_get_recursive_enclosing_rect(self).size
 	elif wrap_controls:
 		rect.size = wrap_t * PerfectPoint.control_get_recursive_enclosing_rect(self).size
-	rect.size = Vector2(ceil(rect.size))
-	
+	rect.size = Vector2(rect.size.ceil())
+
 	global_window_world_rect = rect
 	window_screen_rect = t * global_window_world_rect
 	_camera_ref.global_transform = global_transform
@@ -454,7 +454,7 @@ func force_set_global_world_rect(rect:Rect2):
 func force_set_local_world_rect(rect:Rect2):
 	var t := window_world_transform
 	t *= PerfectPoint.get_screen_metascreen_transform(target_screen_id)
-	
+
 	var wrap_t := window_world_transform.affine_inverse()
 	if wrap_controls and wrap_node2d:
 		rect.size = wrap_t * PerfectPoint.canvasitem_get_recursive_enclosing_rect(self).size
@@ -462,8 +462,8 @@ func force_set_local_world_rect(rect:Rect2):
 		rect.size = wrap_t * PerfectPoint.node2d_get_recursive_enclosing_rect(self).size
 	elif wrap_controls:
 		rect.size = wrap_t * PerfectPoint.control_get_recursive_enclosing_rect(self).size
-	rect.size = Vector2(ceil(rect.size))
-	
+	rect.size = Vector2(rect.size.ceil())
+
 	local_window_world_rect = rect
 	window_screen_rect = t * global_window_world_rect
 	_camera_ref.global_transform = global_transform
@@ -481,24 +481,24 @@ func force_set_local_world_rect(rect:Rect2):
 func guess_is_using_wm_handles(require_cursor_change:bool = false) -> bool:
 	if _window_ref.borderless or _window_ref.unfocusable:
 		return false
-	
+
 	if not _window_ref.mode in [Window.MODE_MAXIMIZED, Window.MODE_WINDOWED]:
 		return false
-	
+
 	if DisplayServer.mouse_get_button_state() & WM_HANDLE_MOUSE_BUTTON_MASK == 0:
 		return false
-	
+
 	if require_cursor_change:
 		var expected_types = WM_HANDLE_CURSOR_TYPES
 		if not _window_ref.unresizable:
 			expected_types += WM_HANDLE_CURSOR_RESIZE_TYPES
 		if not DisplayServer.cursor_get_shape() in expected_types:
 			return false
-	
+
 	var in_rect = Rect2i(_window_ref.get_position(), _window_ref.get_size())
 	var out_rect_position:= Vector2()
 	if not _window_ref.unresizable:
-		out_rect_position = _window_ref.get_position_with_decorations()  
+		out_rect_position = _window_ref.get_position_with_decorations()
 	else:
 		out_rect_position = Vector2(_window_ref.get_position().x,
 									_window_ref.get_position_with_decorations().y)
@@ -513,8 +513,8 @@ func guess_is_using_wm_handles(require_cursor_change:bool = false) -> bool:
 		out_rect_size = _window_ref.get_size()
 	if _window_ref.is_embedded() and not _window_ref.unresizable:
 		out_rect_size += Vector2.ONE * _window_ref.get_theme_constant("resize_margin")
-	var out_rect = Rect2i(floor(out_rect_position),  ceil(out_rect_size))
-	
+	var out_rect = Rect2i(out_rect_position.floor(),  out_rect_size.ceil())
+
 	var cursor_pos:=Vector2i()
 	if _window_ref.is_embedded():
 		cursor_pos = get_parent().get_window().get_mouse_position()
@@ -551,21 +551,21 @@ func _ensure_children():
 		var children = find_children("*", "Window", false, false)
 		if children.size() == 1 and get_child_count(true) < 2:
 			_window_ref = children[0]
-		
+
 	if _window_ref == null:
 		_window_ref = Window.new()
-	
+
 	if _window_ref.get_parent() != self:
 		self.add_child(_window_ref)
-		
+
 	if _camera_ref == null:
 		var children = _window_ref.find_children("*", "Camera2D", false, false)
 		if children.size() == 1 and get_child_count(true) < 2:
 			_camera_ref = children[0]
-	
+
 	if _camera_ref == null:
 		_camera_ref = Camera2D.new()
-	
+
 	if _camera_ref.get_parent() != _window_ref:
 		_window_ref.add_child(_camera_ref)
 
@@ -576,16 +576,16 @@ func _sync_window_settings():
 	if _window_ref == null and (use_in_editor or not Engine.is_editor_hint()):
 		_ensure_children()
 		return
-	
+
 	if _window_ref != null:
-	
+
 		_window_ref.visible = false
-	
+
 		_window_ref.wrap_controls = false
 		_window_ref.use_xr = false
 		_window_ref.own_world_3d = false
 		_window_ref.initial_position = Window.WINDOW_INITIAL_POSITION_ABSOLUTE
-	
+
 		_window_ref.title = title
 		_window_ref.transient = transient
 		_window_ref.transient_to_focused = transient_to_focused
@@ -598,61 +598,61 @@ func _sync_window_settings():
 		_window_ref.unresizable = force_unresizable or wrap_controls or wrap_node2d
 		_window_ref.popup_window = popup_window
 		_window_ref.extend_to_title = extend_to_title
-	
+
 		_window_ref.canvas_cull_mask = canvas_cull_mask
 		_window_ref.snap_2d_transforms_to_pixel = snap_2d_transforms_to_pixel
 		_window_ref.snap_2d_vertices_to_pixel = snap_2d_vertices_to_pixel
 		_window_ref.force_native = force_native
-	
+
 		_window_ref.handle_input_locally = handle_input_locally
 		_window_ref.mouse_passthrough = mouse_passthrough
 		_window_ref.mouse_passthrough_polygon = mouse_passthrough_polygon
 		_window_ref.keep_title_visible = keep_title_visible
 		_window_ref.min_size = min_screen_size
 		_window_ref.max_size = max_screen_size
-	
+
 		_window_ref.disable_3d = disable_3d
-	
+
 		if get_parent() != null and get_parent().get_window() != null:
 			_window_ref.world_2d = get_parent().get_window().world_2d
 			_window_ref.world_3d = get_parent().get_window().world_3d
-	
+
 		if not _window_ref.about_to_popup.is_connected(about_to_popup.emit):
 			_window_ref.about_to_popup.connect(about_to_popup.emit)
-	
+
 		if not _window_ref.close_requested.is_connected(close_requested.emit):
 			_window_ref.close_requested.connect(close_requested.emit)
-	
+
 		if not _window_ref.dpi_changed.is_connected(dpi_changed.emit):
 			_window_ref.dpi_changed.connect(dpi_changed.emit)
-	
+
 		if not _window_ref.files_dropped.is_connected(files_dropped.emit):
 			_window_ref.files_dropped.connect(files_dropped.emit)
-	
+
 		if not _window_ref.focus_entered.is_connected(window_focus_entered.emit):
 			_window_ref.focus_entered.connect(window_focus_entered.emit)
-	
+
 		if not _window_ref.focus_exited.is_connected(window_focus_exited.emit):
 			_window_ref.focus_exited.connect(window_focus_exited.emit)
-	
+
 		if not _window_ref.go_back_requested.is_connected(go_back_requested.emit):
 			_window_ref.go_back_requested.connect(go_back_requested.emit)
-	
+
 		if not _window_ref.mouse_entered.is_connected(window_mouse_entered.emit):
 			_window_ref.mouse_entered.connect(window_mouse_entered.emit)
-	
+
 		if not _window_ref.mouse_exited.is_connected(window_mouse_exited.emit):
 			_window_ref.mouse_exited.connect(window_mouse_exited.emit)
-	
+
 		if not _window_ref.theme_changed.is_connected(theme_changed.emit):
 			_window_ref.theme_changed.connect(theme_changed.emit)
-	
+
 		if not _window_ref.titlebar_changed.is_connected(titlebar_changed.emit):
 			_window_ref.titlebar_changed.connect(titlebar_changed.emit)
-	
+
 		if not _window_ref.window_input.is_connected(window_input.emit):
 			_window_ref.window_input.connect(window_input.emit)
-	
+
 		if is_inside_tree():
 			_window_ref.visible = visible and not Engine.is_editor_hint()
 
@@ -660,7 +660,7 @@ func _sync_camera_settings():
 	if _camera_ref == null and (use_in_editor or not Engine.is_editor_hint()):
 		_ensure_children()
 		return
-	
+
 	if _camera_ref != null:
 		_camera_ref.enabled = true
 		_camera_ref.process_callback = process_callback
@@ -674,25 +674,25 @@ func _sync_camera_settings():
 func _update():
 	if (not use_in_editor) and Engine.is_editor_hint():
 		return
-	
+
 	if _inner_grabbed and not _window_ref.has_focus():
 		_inner_grabbed = false
-	
+
 	if guess_is_using_wm_handles():
 		_sync_rect_from_screen()
 
 func _on_window_input(event:InputEvent):
 	if (not use_in_editor) and Engine.is_editor_hint():
 		return
-	
+
 	if inner_mouse_grab and event.is_action_pressed(inner_mouse_grab_action):
 		if not _inner_grabbed:
 			_grab_offset = DisplayServer.mouse_get_position() - window_screen_rect.position
 		_inner_grabbed = true
-	
+
 	if event.is_action_released(inner_mouse_grab_action):
 		_inner_grabbed = false
-	
+
 	if _inner_grabbed and event is InputEventMouseMotion:
 		force_set_screen_rect(Rect2i(DisplayServer.mouse_get_position() - _grab_offset,
 									 window_screen_rect.size))
