@@ -16,7 +16,6 @@ extends Node2D
 ## This node also add more features,
 ## allowing for the user to move the window with it reflecting that in the canvas,
 ## and other odds and ends allowing for a fully realised [CanvasItem] style [Window].
-##
 ## @experimental
 
 ## See [signal Window.about_to_popup]
@@ -62,9 +61,9 @@ signal window_rect_changed()
 const WM_HANDLE_CURSOR_RESIZE_TYPES:Array[DisplayServer.CursorShape] = [DisplayServer.CURSOR_VSIZE,
 																		DisplayServer.CURSOR_HSIZE,
 																		DisplayServer.CURSOR_HSIZE,
-																	DisplayServer.CURSOR_BDIAGSIZE,
-																	DisplayServer.CURSOR_FDIAGSIZE,
-																	   ]
+																		DisplayServer.CURSOR_BDIAGSIZE,
+																		DisplayServer.CURSOR_FDIAGSIZE,
+																		]
 
 ## All cursor types used when the cursor is actively interacting with the window handles
 ## [b]except[/b] for when the window is begin resized.[br]
@@ -256,10 +255,10 @@ const WM_HANDLE_MOUSE_BUTTON_MASK:MouseButtonMask = MOUSE_BUTTON_MASK_LEFT
 
 @export_group("Rendering")
 ## Disables 3d in the viewport. See [member Viewport.disable_3d].
-## [br][br] - NOTE since the internally created [Window] has not child [Camera3D],
+## [br][br] - NOTE since the internally created [Window] has no child [Camera3D],
 ## there is no support for this window to display [Node3D] nodes in the first place.
-## Unless you intent to manually implement this window to interact in a 3D environment yourself,
-## there is not point in enabling 3d for this window in the first place.
+## Unless you intend to manually implement this window to interact in a 3D environment yourself,
+## there is no point in enabling 3d for this window in the first place.
 @export var disable_3d := true:
 	get:
 		return disable_3d
@@ -339,7 +338,6 @@ var window_screen_rect:Rect2i:
 	get:
 		if _window_ref == null:
 			return Rect2i()
-		var window_pos_offset = _window_ref.position
 		var win_pos := Vector2(_window_ref.position)
 		if _window_ref.is_embedded():
 			var parent_window := get_window()
@@ -410,7 +408,7 @@ func _draw():
 	if not Engine.is_editor_hint():
 		return
 
-	const top_left := Vector2.ZERO
+	var top_left := Vector2.ZERO
 	var bottom_left := in_world_size * Vector2.DOWN
 	var top_right := in_world_size * Vector2.RIGHT
 	var bottom_right := in_world_size
@@ -529,7 +527,7 @@ func guess_is_using_wm_handles(require_cursor_change:bool = false) -> bool:
 ## is not recommended as this is usually done by this [Spyglass] node internally.
 ## This is mainly used for debugging or for functions that require
 ## a reference to a [Window] node directly.
-## Freeing this node at any point will cause undefined behaviour and most likely many errors.
+## Freeing this node at any point will cause undefined behaviour and likely many errors.
 func get_inner_window() -> Window:
 	return _window_ref
 
@@ -537,7 +535,7 @@ func get_inner_window() -> Window:
 ## is not recommended as this is usually done by this [Spyglass] node internally.
 ## This is mainly used for debugging or for functions that require
 ## a reference to a [Camera2D] node directly.
-## Freeing this node at any point will cause undefined behaviour and most likely many errors.
+## Freeing this node at any point will cause undefined behaviour and likely many errors.
 func get_camera_2d() -> Camera2D:
 	return _camera_ref
 
@@ -697,4 +695,4 @@ func _on_window_input(event:InputEvent):
 
 	if _inner_grabbed and event is InputEventMouseMotion:
 		force_set_screen_rect(Rect2i(DisplayServer.mouse_get_position() - _grab_offset,
-									 window_screen_rect.size))
+											window_screen_rect.size))

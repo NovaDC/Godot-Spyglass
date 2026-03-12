@@ -1,68 +1,100 @@
-## Written by NovaDC
-
+@tool
 class_name PerfectPoint
 
 ## PerfectPoint
 ##
-## A external Godot library that supplies static functions that give transforms to and from various canvas items,
-## as well as various other helper utilities.[br]
-## Used primarily for the [Spyglass] addon.
+## A external Godot library that supplies static functions that give
+## transforms to and from various canvas items,
+## as well as various other helper utilities used for the [Spyglass] addon.
+## Written by NovaDC.
+
+
+## Returns the given screen id's transform in the virtual screen space.
+static func get_screen_metascreen_transform(screen_id:int) -> Transform2D:
+	return Transform2D(0, DisplayServer.screen_get_position(screen_id))
+
+## Returns the given screen id's inverse transform in the virtual screen space.
+static func get_screen_metascreen_inverse_transform(screen_id:int) -> Transform2D:
+	return Transform2D(0, DisplayServer.screen_get_position(screen_id)).affine_inverse()
+
 
 ## Gets a transform for a given [param target] [CanvasItem] in metascreen (virtual screen) space.
 static func get_true_metascreen_transform(target:CanvasItem) -> Transform2D:
 	var w := target.get_window()
 	return get_true_window_transform(target, w).translated(w.position)
-## Gets a inverse transform for a given [param target] [CanvasItem] in metascreen (virtual screen) space.
+
+## Gets a inverse transform for a given [param target] [CanvasItem]
+## in metascreen (virtual screen) space.
 static func get_true_metascreen_inverse_transform(target:CanvasItem) -> Transform2D:
 	var w := target.get_window()
 	return get_true_window_inverse_transform(target, w).translated_local(-w.position)
+
 ## Gets the metascreen (virtual screen) position of a given [param target] [CanvasItem].
 static func get_global_metascreen_position(target:CanvasItem) -> Vector2:
 	return get_true_metascreen_transform(target).origin
+
 ## Sets the metascreen (virtual screen) position of a given [param target] [CanvasItem].
 static func set_global_metascreen_position(target:CanvasItem, scr_position:Vector2):
 	target.global_position = get_true_metascreen_inverse_transform(target) * scr_position
 
-## Gets a transform for a given [param target] [CanvasItem] in screen space for the given [param screen_index].
+
+## Gets a transform for a given [param target] [CanvasItem]
+## in screen space for the given [param screen_index].
 static func get_true_screen_transform(target:CanvasItem, screen_index:int) -> Transform2D:
 	return get_true_metascreen_transform(target) * get_screen_metascreen_transform(screen_index)
-## Gets a inverse transform for a given [param target] [CanvasItem] in screen space for the given [param screen_index].
+
+## Gets a inverse transform for a given [param target] [CanvasItem]
+## in screen space for the given [param screen_index].
 static func get_true_screen_inverse_transform(target:CanvasItem, screen_index:int) -> Transform2D:
-	return get_true_metascreen_inverse_transform(target) * get_screen_metascreen_inverse_transform(screen_index)
-## Gets the screen (for the given [param screen_index]) position of a given [param target] [CanvasItem].
+	return (get_true_metascreen_inverse_transform(target) *
+			get_screen_metascreen_inverse_transform(screen_index))
+
+## Gets the screen (for the given [param screen_index]) position
+## of a given [param target] [CanvasItem].
 static func get_global_screen_position(target:CanvasItem, screen_index:int) -> Vector2:
 	return get_true_screen_transform(target, screen_index).origin
-## Sets the screen (for the given [param screen_index]) position of a given [param target] [CanvasItem].
+
+## Sets the screen (for the given [param screen_index]) position
+## of a given [param target] [CanvasItem].
 static func set_global_screen_position(target:CanvasItem, scr_position:Vector2, screen_index:int):
 	target.global_position = get_true_screen_inverse_transform(target, screen_index) * scr_position
 
-## Gets a transform for a given [param target] [CanvasItem] in window space for the given [param window].
-## Leaving [param window] [code]null[/code] will have the target window be whatever the window [param target] is in.
+
+## Gets a transform for a given [param target] [CanvasItem]
+## in window space for the given [param window].
+## Leaving [param window] [code]null[/code] will have the target window
+## be whatever the window [param target] is in.
 static func get_true_window_transform(target:CanvasItem, window:Window = null) -> Transform2D:
 	if window == null:
 		window = target.get_window()
 	return (window.get_final_transform() * target.get_global_transform_with_canvas())
-## Gets a inverse transform for a given [param target] [CanvasItem] in window space for the given [param window].
-## Leaving [param window] [code]null[/code] will have the target window be whatever the window [param target] is in.
-static func get_true_window_inverse_transform(target:CanvasItem, window:Window = null) -> Transform2D:
+
+## Gets a inverse transform for a given [param target] [CanvasItem]
+## in window space for the given [param window].
+## Leaving [param window] [code]null[/code] will have the target window
+## be whatever the window [param target] is in.
+static func get_true_window_inverse_transform(target:CanvasItem,
+												window:Window = null
+												) -> Transform2D:
 	if window == null:
 		window = target.get_window()
 	return (window.get_final_transform() * target.get_canvas_transform()).affine_inverse()
+
 ## Gets the position of a given [param target] [CanvasItem] in the given [param window].
-## Leaving [param window] [code]null[/code] will have the target window be whatever the window [param target] is in.
+## Leaving [param window] [code]null[/code] will have the target window
+## be whatever the window [param target] is in.
 static func get_global_window_position(target:CanvasItem, window:Window = null) -> Vector2:
 	return get_true_window_transform(target, window).origin
+
 ## Sets the position of a given [param target] [CanvasItem] in the given [param window].
-## Leaving [param window] [code]null[/code] will have the target window be whatever the window [param target] is in.
-static func set_global_window_position(target:CanvasItem, win_position:Vector2, window:Window = null):
+## Leaving [param window] [code]null[/code] will have the target window
+## be whatever the window [param target] is in.
+static func set_global_window_position(target:CanvasItem,
+										win_position:Vector2,
+										window:Window = null
+										):
 	target.global_position = get_true_window_inverse_transform(target, window) * win_position
 
-## Returns the given screen id's transform in the virtual screen space.
-static func get_screen_metascreen_transform(screen_id:int) -> Transform2D:
-	return Transform2D(0, DisplayServer.screen_get_position(screen_id))
-## Returns the given screen id's inverse transform in the virtual screen space.
-static func get_screen_metascreen_inverse_transform(screen_id:int) -> Transform2D:
-	return Transform2D(0, DisplayServer.screen_get_position(screen_id)).affine_inverse()
 
 ## Returns a [Rect2] that encloses all of the given [param rects].[br]
 ## Contrary to it's name, [param rects] can contain [Rect2] as well as [Rect2i]s,
