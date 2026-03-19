@@ -300,12 +300,12 @@ func _get_configuration_warnings() -> PackedStringArray:
 		warn.append("No frame window. Spyglass will not function.")
 	if anchor_mode != ANCHOR_MODE_FIXED_TOP_LEFT:
 		const MSG := ("Spyglass may misbehave when anchor_mode is not set to" +
-					"ANCHOR_MODE_FIXED_TOP_LEFT on some OSes when using OS resizing methods."
-					)
+						" ANCHOR_MODE_FIXED_TOP_LEFT on some OSes when using OS resizing methods."
+						)
 		warn.append(MSG)
 	if is_inside_tree() and get_tree() != null:
 		var tree := get_tree()
-		if relative_to_root_window and tree.root.find_children("*", "Camera2D", true, false).size() <= 1:
+		if tree.root.find_children("*", "Camera2D", true, false).size() <= 1:
 			warn.append("Spyglass will not work if its the only Camera2D to display.")
 	return warn
 
@@ -330,18 +330,23 @@ func _property_get_revert(property: StringName) -> Variant:
 		"anchor_mode":
 			return ANCHOR_MODE_FIXED_TOP_LEFT
 		"frame_window" when is_inside_tree():
-			var local_tree := get_tree()
-			for immediate_child in find_children("*", "Window", false, false):
+			# first try direct children
+			for immediate_child in find_children("*", "Window", false, true):
 				if not immediate_child.is_queued_for_deletion():
 					return immediate_child
-			for recursive_child in find_children("*", "Window", true, false):
+			# then indirect children
+			for recursive_child in find_children("*", "Window", true, true):
 				if not recursive_child.is_queued_for_deletion():
 					return recursive_child
+			# then parents, as long as it's not the root window
+			var local_tree := get_tree()
 			var p := get_parent()
-			while p != null and p.get_tree() == local_tree:
+			while p != null and p != local_tree.root and p.get_tree() == local_tree:
 				if p is Window and not p.is_queued_for_deletion():
 					return p
 				p = p.get_parent()
+			# welp, we tried...
+			return null
 	return null
 
 func _on_window_update_position():
