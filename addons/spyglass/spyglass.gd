@@ -3,11 +3,69 @@
 class_name Spyglass
 extends Camera2D
 
+## Maps a [Window] accurately into world space, with full control both ways.
+##
+## A [Camera2D] inheriting node that allows for a attached [member frame_window]
+## to have it's screen position and size corelate exactly to
+## this nodes global position and camera size.[br]
+## This supports both embedded and native windows, and allows for the
+## screen offsets to be relative to the virtual screen space or the [member SceneTree.root].[br]
+## This also ensure that the positioning and resizing of the window works both ways,
+## allowing for full use of the native OS's handles.[br]
+## [br]
+## [br]
+## [b]NOTES:[/b][br]
+## [br]
+## - Since the [member frame_window] shares the same [World2D] as this node,
+## additional efforts must be taken to ensure child nodes of the [member frame_window]
+## [i]don't[/i] appear in the [member SceneTree.root] or other viewports,
+## such as using [CanvasLayer] nodes or different rendering layers to do this instead.[br]
+## [br]
+## - As this inherits from (and is a type of) [Camera2D],
+## at least one other (properly enabled) [Camera2D] should exist in the tree
+## to ensure that the [member SceneTree.root] [Window]
+## does not also display the view from this as a camera.[br]
+## [br]
+## - Due to some native OS's window snapping routines,
+## using a [member Camera2D.anchor_mode]
+## besides [constant Camera2D.ANCHOR_MODE_FIXED_TOP_LEFT]
+## may result in jittering and disjoining the position
+## from global space when resizing the window.[br]
+## [br]
+## - Due to the rendering order of [Window] nodes, a spyglass with a native window,
+## when moved via the window itself (as opposed to moving this spyglass in world-space),
+## may show the view from its new world position only after the window itself is moved.
+## This will likely be seen as a jittering effect when the window is moved at a moderate speed.
+## to add or remove a manual delay for window-to-world or world-to-window updates,
+## see [member defer_window_updates].[br]
+## [br]
+## - Disabling [member Camera2D.ignore_rotation] for this node will likely cause visual issues.
+
+## Emitted when [member frame_window] changes to a different value.
 signal frame_window_changed()
 
+## Emitted when a custom grab is started.
+## [param offset] is the mouse offset from the window in virtual screen space.[br]
+## [br]
+## See [method start_custom_mouse_grab] for more information.
 signal window_custom_grab_started(offset:Vector2i)
+## Emitted when a custom grab is ended.[br]
+## [br]
+## See [method end_custom_mouse_grab] for more information.
 signal window_custom_grab_finished()
 
+## The window to frame this [Spyglass] in.[br]
+## If not set (or set to a node thats [method Object.is_queued_for_deletion],
+## or the [member SceneTree.root])
+## or if not [member Window.visible] the spyglass effect wont be enabled.[br]
+## [br]
+## - [b]NOTE:[/b] The [Window]'s [member Window.initial_position] will not be accounted for.
+## To enforce an additional offset between the spyglass node and
+## the [member Window.position] during updates, use [member window_custom_screen_offset].[br]
+## - [b]NOTE:[/b] On certain OSes,
+## when [member Camera2D.anchor_mode] is not [constant Camera2D.ANCHOR_MODE_FIXED_TOP_LEFT]
+## non-embedded windows may jitter and/or become disjointed from this node when resized
+## by the OS itself due to automatic window snapping.[br]
 @export var frame_window:Window:
 	get:
 		return frame_window
@@ -80,6 +138,9 @@ signal window_custom_grab_finished()
 			update_spyglass()
 		update_configuration_warnings()
 
+## Offsets [member frame_window]'s [member Window.position] from the
+## [member Node2D.global_position] of this node in virtual screen coordinates.[br]
+## See also [member window_adjusted_screen_rect].
 @export_custom(PROPERTY_HINT_NONE, "suffix:px") var window_custom_screen_offset := Vector2i.ZERO:
 	get:
 		return window_custom_screen_offset
@@ -87,6 +148,10 @@ signal window_custom_grab_finished()
 		window_custom_screen_offset = _value
 		update_spyglass()
 
+## When set, the [member frame_window]'s [member Window.position] will
+## always be relative to the active [member SceneTree.root].[br]
+## This will only apply if [member SceneTree.root] is not also [member frame_window].[br]
+## See also [member window_adjusted_screen_rect].
 @export var relative_to_root_window := true:
 	get:
 		return relative_to_root_window
@@ -97,18 +162,58 @@ signal window_custom_grab_finished()
 		if changed:
 			update_spyglass()
 
+## When set to a valid input action, [member frame_window] will automatically
+## call [method start_custom_mouse_grab] and [method end_custom_mouse_grab]
+## as appropriate. These input events will only be read from [member frame_window]
+## specific input events ([signal Window.window_input] and [signal Window.nonclient_window_input]).
 @export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin,loose_mode")
 var custom_mouse_grab_action:StringName = "spyglass_grab"
 
 @export_group("Update")
+## Allows for the updating of node-to-screen and screen-to-node positions
+## to be deferred for a specific amount of frames.[br]
+## When set to a positive value, node-to-screen will lag for
+## [code]absi(defer_window_updates)[/code] frames.[br]
+## When set to a negative value, screen-to-node will lag for
+## [code]absi(defer_window_updates)[/code] frames.[br]
+## This may only be useful in specific situations and configurations
+## where there is a constant amount of lag between the updating of
+## a [Window]'s position compared to the updating of the [SceneTree].[br]
+## This can also easily cause worse lag if overused.
+## This is only expected to be of use for native (non-embedded) windows,
+## as embedded windows will always update with their embedder in the right order.
 @export_range(-8, 8, 1, "prefer_slider", "suffix:frames") var defer_window_updates:int = 0
+## Enable updating the spyglass when the [member frame_window] is moved.
+## It's suggested to leave this enabled even if the user is not allow to move the window,
+## as this also allows for this spyglass to react to the OS's window position changes as well.[br]
+## [b]NOTE:[/b] This will enable updates triggered by [member frame_window]'s movement,
+## not when [member relative_to_root_window] would require updates from the root window.
 @export var update_on_window_moved := true
+## Enable updating the spyglass when the this node's
+## [member Node2D.global_transform] changes at all.[br]
+## It's suggested to leave this enabled for accuracy.[br]
 @export var update_on_transform_changed := true
+## Force an update every processed frame.[br]
+## It's suggested to leave this disabled unless necessary.[br]
 @export var update_on_process := false
+## Force an update every physics frame.[br]
+## It's suggested to leave this disabled unless necessary.[br]
 @export var update_on_physics_process := false
+## Force an update every input event.[br]
+## It's suggested to leave this disabled unless necessary.[br]
 @export var update_on_input := false
+## Force an update every input event received in [member frame_window].[br]
+## Depending on how inputs are handled between [member frame_window] and it's
+## parents, this may be redundant to [member update_on_input].
+## It's suggested to leave this disabled unless necessary.[br]
+## [b]NOTE:[/b] This will not disable updates triggered by [member custom_mouse_grab_action]
+## or any other kinds of custom mouse grabs
+## (via [method start_custom_mouse_grab] and [method end_custom_mouse_grab]).
 @export var update_on_window_input := false
 
+## The screen relative rect of the [member frame_window] [i]after[/i] accounting
+## for adjustment.[br]
+## [b]NOTE:[/b] For the true virtual screen rect, use [member window_virtual_screen_rect].
 var window_adjusted_screen_rect:Rect2i:
 	get:
 		var rect := get_window_virtual_screen_rect()
@@ -126,6 +231,9 @@ var window_adjusted_screen_rect:Rect2i:
 		_value.position += window_custom_screen_offset
 		return set_window_virtual_screen_rect(_value)
 
+## The virtual screen relative rect of the [member frame_window].[br]
+## [b]NOTE:[/b] To account for [member relative_to_root_window]
+## or [member window_custom_screen_offset], use [member window_adjusted_screen_rect].
 var window_virtual_screen_rect:Rect2i:
 	get = get_window_virtual_screen_rect, set = set_window_virtual_screen_rect
 
@@ -273,6 +381,9 @@ func _on_window_or_nonclient_input(event:InputEvent):
 func _refresh_frame_window():
 	frame_window = frame_window
 
+## Gets the virtual screen relative rect of the [member frame_window].[br]
+## [b]NOTE:[/b] To account for [member relative_to_root_window]
+## or [member window_custom_screen_offset], use [member window_adjusted_screen_rect].
 func get_window_virtual_screen_rect() -> Rect2i:
 	if frame_window == null:
 		return Rect2i()
@@ -290,6 +401,9 @@ func get_window_virtual_screen_rect() -> Rect2i:
 
 	return int_rect
 
+## Sets the virtual-screen relative rect of the [member frame_window].[br]
+## [b]NOTE:[/b] To account for [member relative_to_root_window]
+## or [member window_custom_screen_offset], use [member window_adjusted_screen_rect].
 func set_window_virtual_screen_rect(value:Variant):
 	if frame_window == null:
 		return
@@ -310,6 +424,12 @@ func set_window_virtual_screen_rect(value:Variant):
 	frame_window.position = value.position
 	#frame_window.size = value.size
 
+## Gets the screen (a [i]physical[/i] screen, not the virtual screen)
+## relative rect of the [member frame_window] relative to the
+## provided [param screen_id].[br]
+## See [method DisplayServer.screen_get_position] for more information about [param screen_id].[br]
+## [b]NOTE:[/b] This will not account for [member relative_to_root_window]
+## nor [member window_custom_screen_offset].
 func get_window_screen_rect(screen_id:int = 0) -> Rect2i:
 	if frame_window == null:
 		return Rect2i()
@@ -317,12 +437,22 @@ func get_window_screen_rect(screen_id:int = 0) -> Rect2i:
 	rect.position -= DisplayServer.screen_get_position(screen_id)
 	return rect
 
+## Sets the screen (a [i]physical[/i] screen, not the virtual screen)
+## relative rect of the [member frame_window] relative to the
+## provided [param screen_id].[br]
+## See [method DisplayServer.screen_get_position] for more information about [param screen_id].[br]
+## [b]NOTE:[/b] This will not account for [member relative_to_root_window]
+## nor [member window_custom_screen_offset].
 func set_window_screen_rect(value:Rect2i, screen_id:int = 0):
 	if frame_window == null:
 		return
 	value.position += DisplayServer.screen_get_position(screen_id)
 	window_adjusted_screen_rect = value
 
+## Gets a window relative rect of the [member frame_window] relative to the
+## provided [param window].[br]
+## [b]NOTE:[/b] This will not account for [member relative_to_root_window]
+## nor [member window_custom_screen_offset].
 func get_window_relative_window_rect(window:Window) -> Rect2i:
 	if frame_window == null:
 		return Rect2i()
@@ -330,12 +460,21 @@ func get_window_relative_window_rect(window:Window) -> Rect2i:
 	rect.position -= window.position
 	return rect
 
+## Sets the window relative rect of the [member frame_window] relative to the
+## provided [param window].[br]
+## [b]NOTE:[/b] This will not account for [member relative_to_root_window]
+## nor [member window_custom_screen_offset].
 func set_window_relative_window_rect(value:Rect2i, window:Window):
 	if frame_window == null:
 		return
 	value.position += window.position
 	window_adjusted_screen_rect = value
 
+## Returns the bounds of the spyglass in global space.[br]
+## [b]NOTE:[/b] the size and position of this rect is not always the
+## [member Node2D.global_position] of this node, nor the size of the [member frame_window].
+## This method allows for accurate calculations of the cameras
+## true positioning in global world space.
 func get_camera_world_rect() -> Rect2:
 	if frame_window == null:
 		return Rect2()
@@ -345,6 +484,9 @@ func get_camera_world_rect() -> Rect2:
 		pos -= size/2
 	return Rect2(pos, size)
 
+## This method typically indicates that the various requirements
+## for this spyglass to function are satisfied.[br]
+## When [code]false[/code], [member update_spyglass] will not update anything.
 func is_spyglass_enabled() -> bool:
 	if not is_inside_tree() or not is_node_ready() or frame_window == null:
 		return false
@@ -352,6 +494,16 @@ func is_spyglass_enabled() -> bool:
 		return false
 	return enabled and visible and frame_window.visible
 
+## Indicates the control-flow of the positioning of the spyglass when [method update_spyglass]
+## is called.[br]
+## When [code]true[/code], the position of the [member frame_window] will always effect the
+## [member Node2D.global_position] of this node.
+## Otherwise, the [member Node2D.global_position] of this node will always effect the
+## position of the [member frame_window].[br]
+## When inheriting this class, this method should be overridden when another feature that effects
+## control flow is added.[br]
+## This will always be [code]false[/code] when [method is_spyglass_enabled]
+## returns [code]false[/code].
 func is_window_controlling() -> bool:
 	if not is_spyglass_enabled():
 		return false
@@ -361,6 +513,12 @@ func is_window_controlling() -> bool:
 		return true
 	return (_os_window_moved_instance and not _os_window_sized_instance)
 
+## Attempts to trigger an update of the spyglass' state.[br]
+## Will never take effect when [method is_spyglass_enabled] returns [code]false[/code].[br]
+## To determine the control flow of positioning, see [method is_window_controlling].[br]
+## When inheriting this class, this method should be overridden when adding/modifying features
+## related to positioning or the updating of the window's rect,
+## as this is the main method called when the spyglass requires some form of update.
 func update_spyglass():
 	if not is_spyglass_enabled():
 		return
@@ -398,12 +556,31 @@ func update_spyglass():
 				f = f.call_deferred
 	f.call()
 
+## Returns [code]true[/code] when a custom mouse gram is in effect.[br]
+## See [method start_custom_mouse_grab] and [method end_custom_mouse_grab]
+## for more information about custom mouse grabbing.
 func is_custom_grabbed() -> bool:
 	return _is_custom_grabbed
 
+## Returns the last custom mouse grab offset.[br]
+## This will still return the last offset of the custom mouse grab, even if not grabbed anymore.[br]
+## This will return [constant Vector2i.ZERO] when no custom mouse grab has ever been performed.[br]
+## See [method start_custom_mouse_grab] and [method end_custom_mouse_grab]
+## for more information about custom mouse grabbing.
 func get_last_custom_grab_offset() -> Vector2i:
 	return _custom_grab_offset
 
+## Grabs the [method frame_window] with the mouse, regardless of the mouse's position.[br]
+## This snaps the position of the window to the mouse's position, offset by
+## [param window_cursor_offset].[br]
+## Where possible, this should be prefered over suing [member frame_window]'s
+## [method Window.start_drag] method, as it allows for more accurate spyglass updating.[br]
+## While the window will stay relative to the mouse when a custom mouse grab is in effect,
+## this is not specifically tied to the mouse's buttons,
+## only to the calling of [method start_custom_mouse_grab] and [method end_custom_mouse_grab].
+## If a custom mouse grab is not already in effect (see [method is_custom_grabbed])
+## this method will start one and return [code]true[/code],
+## otherwise this method will return [code]false[/code].
 func start_custom_mouse_grab(window_cursor_offset:Vector2i) -> bool:
 	if is_custom_grabbed():
 		return false
@@ -412,6 +589,10 @@ func start_custom_mouse_grab(window_cursor_offset:Vector2i) -> bool:
 	window_custom_grab_started.emit(window_cursor_offset)
 	return true
 
+## If a custom mouse grab is already in effect (see [method is_custom_grabbed])
+## this method will end it and return [code]true[/code],
+## otherwise this method will return [code]false[/code].
+## for more information about custom mouse grabs, see [method start_custom_mouse_grab].
 func end_custom_mouse_grab() -> bool:
 	if not is_custom_grabbed():
 		return false
