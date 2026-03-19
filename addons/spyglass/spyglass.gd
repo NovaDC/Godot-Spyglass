@@ -3,15 +3,15 @@
 class_name Spyglass
 extends Camera2D
 
-## Maps a [Window] accurately into world space, with full control both ways.
+## Maps a [Window] accurately into 2D world space, with full control both ways.
 ##
-## A [Camera2D] inheriting node that allows for a attached [member frame_window]
+## A [Camera2D] inheriting node that allows for the attached [member frame_window]
 ## to have it's screen position and size corelate exactly to
-## this nodes global position and camera size.[br]
+## this node's member [Node2D.global_position] and camera size.[br]
 ## This supports both embedded and native windows, and allows for the
 ## screen offsets to be relative to the virtual screen space or the [member SceneTree.root].[br]
-## This also ensure that the positioning and resizing of the window works both ways,
-## allowing for full use of the native OS's handles.[br]
+## This also ensures that the positioning and resizing of the window works both ways,
+## allowing for full use of the native OS's window handles.[br]
 ## [br]
 ## [br]
 ## [b]NOTES:[/b][br]
@@ -36,12 +36,13 @@ extends Camera2D
 ## when moved via the window itself (as opposed to moving this spyglass in world-space),
 ## may show the view from its new world position only after the window itself is moved.
 ## This will likely be seen as a jittering effect when the window is moved at a moderate speed.
-## to add or remove a manual delay for window-to-world or world-to-window updates,
+## To add or remove a manual delay for window-to-world or world-to-window updates,
 ## see [member defer_window_updates].[br]
 ## [br]
 ## - Disabling [member Camera2D.ignore_rotation] for this node will likely cause visual issues.
 
-## Emitted when [member frame_window] changes to a different value.
+## Emitted when [member frame_window] changes to a different node.[br]
+## This is not emitted when [member frame_window] is set to the same value.
 signal frame_window_changed()
 
 ## Emitted when a custom grab is started.
@@ -576,7 +577,8 @@ func get_last_custom_grab_offset() -> Vector2i:
 ## only to the calling of [method start_custom_mouse_grab] and [method end_custom_mouse_grab].
 ## If a custom mouse grab is not already in effect (see [method is_custom_grabbed])
 ## this method will start one and return [code]true[/code],
-## otherwise this method will return [code]false[/code].
+## otherwise this method will return [code]false[/code].[br]
+## [param window_cursor_offset] will always be in virtual screen space.
 func start_custom_mouse_grab(window_cursor_offset:Vector2i) -> bool:
 	if is_custom_grabbed():
 		return false

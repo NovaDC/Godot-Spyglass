@@ -1,8 +1,10 @@
 @tool
 extends EditorPlugin
 
+## The name of this plugin.
 const PLUGIN_NAME := "Spyglass"
 
+## The icon of this plugin.
 const PLUGIN_ICON:Texture2D = preload("./icon.svg")
 
 const _ENSURE_SCRIPT_DOCS:Array[Script] = [
