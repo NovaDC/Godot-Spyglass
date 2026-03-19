@@ -9,7 +9,7 @@ A `Camera2D` inheriting node that allows for an attached `Window` node to have i
 This supports both embedded and native windows, and allows for the screen offsets to be relative to the virtual screen space or the `SceneTree.root`.
 This also ensures that the positioning and resizing of the window works both ways, allowing for full use of the native OS's window handles.
 
-Due to heavy implementation changes introduced in Godot-Spyglass v2, Godot-Spyglass v2 is not backward compatible with Godot-Spyglass v1.
+Due to heavy implementation changes introduced in Godot-Spyglass v2, Godot-Spyglass v2 is not backward compatible with Godot-Spyglass v1. THis als means that compatiblity with Godot v4.5 is no longer supported.
 
 ## Usage notes
 
