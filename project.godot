@@ -14,9 +14,11 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/description="A node that correlates to a in world Node2D CanvasItem, allowing for a Window node to interact with the SceneTree directly as if it were a CanvasItem itself - even for native windows"
-config/version="v1.0.1.0"
 config/name="Godot-Spyglass"
+config/description="A Camera2D inheriting node that allows for an attached Window node to have it's screen position and size corelate exactly to this node's global position and camera size.
+This supports both embedded and native windows, and allows for the screen offsets to be relative to the virtual screen space or the SceneTree root.
+This also ensures that the positioning and resizing of the window works both ways, allowing for full use of the native OS's window handles."
+config/version="v2.0.0.0"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 boot_splash/image="uid://c4rxhshda3sc4"
 config/icon="uid://jtj1qk24654v"
