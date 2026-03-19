@@ -98,8 +98,6 @@ signal window_custom_grab_finished()
 				frame_window.nonclient_window_input.disconnect(_on_window_or_nonclient_input)
 			if frame_window.visibility_changed.is_connected(update_spyglass):
 				frame_window.visibility_changed.disconnect(update_spyglass)
-			if frame_window.about_to_popup.is_connected(update_spyglass):
-				frame_window.about_to_popup.disconnect(update_spyglass)
 			if frame_window.size_changed.is_connected(_on_window_update_size):
 				frame_window.size_changed.disconnect(_on_window_update_size)
 
@@ -126,8 +124,6 @@ signal window_custom_grab_finished()
 				frame_window.nonclient_window_input.connect(_on_window_or_nonclient_input)
 			if not frame_window.visibility_changed.is_connected(update_spyglass):
 				frame_window.visibility_changed.connect(update_spyglass)
-			if not frame_window.about_to_popup.is_connected(update_spyglass):
-				frame_window.about_to_popup.connect(update_spyglass)
 			if not frame_window.size_changed.is_connected(_on_window_update_size):
 				frame_window.size_changed.connect(_on_window_update_size)
 
@@ -246,14 +242,13 @@ var _custom_grab_offset := Vector2i.ZERO
 
 func _notification(what: int) -> void:
 	match(what):
-		NOTIFICATION_MOVED_IN_PARENT, NOTIFICATION_PARENTED, NOTIFICATION_UNPARENTED:
-			if Engine.is_editor_hint():
-				notify_property_list_changed()
 		NOTIFICATION_READY, NOTIFICATION_WORLD_2D_CHANGED:
 			_refresh_frame_window()
 			if Engine.is_editor_hint():
-				if not child_order_changed.is_connected(notify_property_list_changed):
-					child_order_changed.connect(notify_property_list_changed)
+				if not get_tree().tree_changed.is_connected(notify_property_list_changed):
+					get_tree().tree_changed.connect(notify_property_list_changed)
+				if not get_tree().tree_changed.is_connected(update_configuration_warnings):
+					get_tree().tree_changed.connect(update_configuration_warnings)
 			set_notify_transform(true)
 			_latest_transform = global_transform
 		NOTIFICATION_TRANSFORM_CHANGED when _latest_transform != global_transform:
@@ -316,29 +311,24 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 func _property_can_revert(property: StringName) -> bool:
 	match (property):
-		"update_on_process", "update_on_physics_process":
+		"update_on_process", "update_on_physics_process", "anchor_mode", "process_callback":
 			return true
-		"anchor_mode":
-			return true
-		"window_adjusted_screen_rect":
-			return true
-		"frame_window" when is_inside_tree():
-			return true
+		"frame_window":
+			return is_inside_tree()
 	return false
 
 func _property_get_revert(property: StringName) -> Variant:
+	# The only way to know when builtin properties are changed
+	# The property list notification isn't automatically triggered
+	# for some reason...
+	update_configuration_warnings()
 	match (property):
 		"update_on_process":
 			return process_callback == CAMERA2D_PROCESS_IDLE
 		"update_on_physics_process":
 			return process_callback == CAMERA2D_PROCESS_PHYSICS
 		"anchor_mode":
-			# The only way to know when the anchor mode is changed
-			# The property list notification doesn't work for some reason...
-			update_configuration_warnings()
 			return ANCHOR_MODE_FIXED_TOP_LEFT
-		"window_adjusted_screen_rect":
-			return window_adjusted_screen_rect
 		"frame_window" when is_inside_tree():
 			var local_tree := get_tree()
 			for immediate_child in find_children("*", "Window", false, false):
