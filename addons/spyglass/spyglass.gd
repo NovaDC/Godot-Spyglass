@@ -349,17 +349,17 @@ func _property_get_revert(property: StringName) -> Variant:
 			return null
 	return null
 
-func _on_window_update_position():
+func _on_window_update_position() -> void:
 	if update_on_window_moved:
 		_os_window_moved_instance = true
 		update_spyglass()
 
-func _on_window_update_size():
+func _on_window_update_size() -> void:
 	_os_window_sized_instance = true
 	update_spyglass()
 	update_spyglass.call_deferred()
 
-func _on_window_or_nonclient_input(event:InputEvent):
+func _on_window_or_nonclient_input(event:InputEvent) -> void:
 	if InputMap.has_action(custom_mouse_grab_action):
 		var mouse_v_screen := DisplayServer.mouse_get_position()
 		var mouse_in_v_screen := window_virtual_screen_rect.has_point(mouse_v_screen)
@@ -373,7 +373,7 @@ func _on_window_or_nonclient_input(event:InputEvent):
 	elif update_on_window_input:
 		update_spyglass()
 
-func _refresh_frame_window():
+func _refresh_frame_window() -> void:
 	frame_window = frame_window
 
 ## Gets the virtual screen relative rect of the [member frame_window].[br]
@@ -399,7 +399,7 @@ func get_window_virtual_screen_rect() -> Rect2i:
 ## Sets the virtual-screen relative rect of the [member frame_window].[br]
 ## [b]NOTE:[/b] To account for [member relative_to_root_window]
 ## or [member window_custom_screen_offset], use [member window_adjusted_screen_rect].
-func set_window_virtual_screen_rect(value:Variant):
+func set_window_virtual_screen_rect(value:Variant)  -> void:
 	if frame_window == null:
 		return
 
@@ -514,16 +514,16 @@ func is_window_controlling() -> bool:
 ## When inheriting this class, this method should be overridden when adding/modifying features
 ## related to positioning or the updating of the window's rect,
 ## as this is the main method called when the spyglass requires some form of update.
-func update_spyglass():
+func update_spyglass() -> bool:
 	if not is_spyglass_enabled():
-		return
+		return false
 	var f:Callable
 	if is_window_controlling():
 		if is_custom_grabbed():
 			var mouse_pos := DisplayServer.mouse_get_position()
 			frame_window.position = Vector2(mouse_pos - get_last_custom_grab_offset())
-		f = func ():
-			print("position from window")
+		f = func () -> void:
+			# position from window
 			var new_pos := Vector2(window_adjusted_screen_rect.position)
 			if anchor_mode == ANCHOR_MODE_DRAG_CENTER:
 				new_pos += Vector2(window_adjusted_screen_rect.size) / 2
@@ -535,8 +535,8 @@ func update_spyglass():
 			for _x in range(absi(defer_window_updates)):
 				f = f.call_deferred
 	else:
-		f = func ():
-			print("window from position")
+		f = func () -> void:
+			# window from position
 			var fpos := global_position
 			if anchor_mode == ANCHOR_MODE_DRAG_CENTER:
 				fpos -= Vector2(window_adjusted_screen_rect.size) / 2
@@ -550,6 +550,7 @@ func update_spyglass():
 			for _x in range(absi(defer_window_updates)):
 				f = f.call_deferred
 	f.call()
+	return true
 
 ## Returns [code]true[/code] when a custom mouse gram is in effect.[br]
 ## See [method start_custom_mouse_grab] and [method end_custom_mouse_grab]
