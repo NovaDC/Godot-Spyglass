@@ -225,7 +225,7 @@ var window_adjusted_screen_rect:Rect2i:
 			if tree != null and tree.root != null and tree.root != frame_window:
 				_value.position += tree.root.position
 		_value.position += window_custom_screen_offset
-		return set_window_virtual_screen_rect(_value)
+		set_window_virtual_screen_rect(_value)
 
 ## The virtual screen relative rect of the [member frame_window].[br]
 ## [b]NOTE:[/b] To account for [member relative_to_root_window]
@@ -417,7 +417,7 @@ func set_window_virtual_screen_rect(value:Variant):
 	value = Rect2i(value.position.floor(), value.size.floor())
 
 	frame_window.position = value.position
-	#frame_window.size = value.size
+	frame_window.size = value.size
 
 ## Gets the screen (a [i]physical[/i] screen, not the virtual screen)
 ## relative rect of the [member frame_window] relative to the
@@ -428,7 +428,7 @@ func set_window_virtual_screen_rect(value:Variant):
 func get_window_screen_rect(screen_id:int = 0) -> Rect2i:
 	if frame_window == null:
 		return Rect2i()
-	var rect := window_adjusted_screen_rect
+	var rect := get_window_virtual_screen_rect()
 	rect.position -= DisplayServer.screen_get_position(screen_id)
 	return rect
 
@@ -438,11 +438,11 @@ func get_window_screen_rect(screen_id:int = 0) -> Rect2i:
 ## See [method DisplayServer.screen_get_position] for more information about [param screen_id].[br]
 ## [b]NOTE:[/b] This will not account for [member relative_to_root_window]
 ## nor [member window_custom_screen_offset].
-func set_window_screen_rect(value:Rect2i, screen_id:int = 0):
+func set_window_screen_rect(value:Variant, screen_id:int = 0) -> void:
 	if frame_window == null:
 		return
 	value.position += DisplayServer.screen_get_position(screen_id)
-	window_adjusted_screen_rect = value
+	set_window_virtual_screen_rect(value)
 
 ## Gets a window relative rect of the [member frame_window] relative to the
 ## provided [param window].[br]
@@ -451,7 +451,7 @@ func set_window_screen_rect(value:Rect2i, screen_id:int = 0):
 func get_window_relative_window_rect(window:Window) -> Rect2i:
 	if frame_window == null:
 		return Rect2i()
-	var rect := window_adjusted_screen_rect
+	var rect := get_window_virtual_screen_rect()
 	rect.position -= window.position
 	return rect
 
@@ -459,11 +459,11 @@ func get_window_relative_window_rect(window:Window) -> Rect2i:
 ## provided [param window].[br]
 ## [b]NOTE:[/b] This will not account for [member relative_to_root_window]
 ## nor [member window_custom_screen_offset].
-func set_window_relative_window_rect(value:Rect2i, window:Window):
+func set_window_relative_window_rect(value:Variant, window:Window) -> void:
 	if frame_window == null:
 		return
 	value.position += window.position
-	window_adjusted_screen_rect = value
+	set_window_virtual_screen_rect(value)
 
 ## Returns the bounds of the spyglass in global space.[br]
 ## [b]NOTE:[/b] the size and position of this rect is not always the
