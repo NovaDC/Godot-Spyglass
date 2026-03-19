@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/description="A node that correlates to a in world Node2D CanvasItem, allowing for a Window node to interact with the SceneTree directly as if it were a CanvasItem itself - even for native windows"
-config/version="1.0.0.0"
+config/version="v1.0.1.0"
 config/name="Godot-Spyglass"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 boot_splash/image="uid://c4rxhshda3sc4"
